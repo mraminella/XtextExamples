@@ -1,0 +1,108 @@
+grammar org.xtext.example.smalljava.SmallJava with org.eclipse.xtext.common.Terminals
+
+generate smallJava "http://www.xtext.org/example/smalljava/SmallJava"
+
+SJProgram:
+	classes += SJClass*
+;
+
+SJClass: 'class' name=ID ('extends' superclass=[SJClass])?
+	'{' members += SJMember* '}'
+;
+
+SJMember:
+	SJField | SJMethod
+;
+
+fragment SJTypedDeclaration *:
+	type=[SJClass] name=ID
+;
+
+SJField:
+	SJTypedDeclaration ';'
+;
+
+SJMethod:
+	SJTypedDeclaration
+	'(' (params+=SJParameter 
+		(',' params +=SJParameter)*
+		)?
+	')' body = SJBlock
+;
+
+SJParameter:
+	SJTypedDeclaration
+;
+
+SJBlock:
+	{SJBlock} '{' statements += SJStatement* '}'
+;
+
+SJStatement:
+	SJVariableDeclaration |
+	SJReturn |
+	SJExpression ';' |
+	SJIfStatement
+;
+
+SJReturn:
+	'return' expression = SJExpression ';'
+;
+
+SJVariableDeclaration:
+	SJTypedDeclaration '=' expression=SJExpression ';'
+;
+
+SJIfStatement:
+	'if' '(' expression=SJExpression ')' thenBlock=SJIfBlock
+	(=> 'else' elseBlock=SJIfBlock)?
+;
+
+SJIfBlock returns SJBlock:
+	statements+=SJStatement
+	| SJBlock;
+	
+SJSymbol:
+	SJVariableDeclaration | SJParameter;
+	
+SJNamedElement:
+	SJClass | SJMember | SJSymbol
+;
+
+SJExpression:
+	SJAssignment;
+
+SJAssignment returns SJExpression:
+	SJSelectionExpression
+	({SJAssignment.left=current} '=' right=SJExpression)?; // Right associativity
+/* */
+SJSelectionExpression returns SJExpression:
+	SJTerminalExpression
+	(
+		{SJMemberSelection.receiver=current} '.'
+		member=[SJMember]
+		(methodinvocation?='('
+			(args+=SJExpression (',' args+=SJExpression)*)? ')'
+		)?
+	)*;
+
+/* 
+SJSelectionExpression returns SJExpression:
+	SJTerminalExpression
+	(
+		({SJMethodInvocation.receiver=current} '.'
+			method=[SJMethod]
+			'(' (args+=SJExpression(',' args+=SJExpression)*)? ')'
+		) |
+		({SJFieldSeleciton.receiver=current} '.' field = [SJField])
+	)*
+;
+*/
+SJTerminalExpression returns SJExpression:
+	{SJThis} 'this' |
+	{SJNull} 'null' |
+	{BoolConstant} value=('true' | 'false') |
+	{SJSymbolRef} symbol=[SJSymbol] |
+	{SJNew} 'new' type=[SJClass] '(' ')' |
+	'(' SJExpression ')';
+
