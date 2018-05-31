@@ -7,7 +7,7 @@ Here there are example I introduce in the slides produced for the corse of Langu
 
 This is a modified and reduced version of the examples from the book of Lorenzo Bettini, in chapters 8 and 9:
 
-#Implementing Domain-Specific Languages with Xtext and Xtend, 2nd Edition
+# Implementing Domain-Specific Languages with Xtext and Xtend, 2nd Edition
 "Implementing Domain-Specific Languages with Xtext and Xtend - Second Edition"
 ISBN: 9781786464965
 
